@@ -1,0 +1,1519 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Algebraic Structures — Quiz</title>
+
+<!-- ============================================================
+     FONTS — Fraunces (display serif, mathematical/textbook feel),
+     Inter (clean UI body face), JetBrains Mono (data/utility face)
+     ============================================================ -->
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,400;9..144,500;9..144,600;9..144,700&family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600;700&display=swap" rel="stylesheet">
+
+<style>
+/* ============================================================
+   DESIGN TOKENS
+   ============================================================ */
+:root{
+  /* Color: light indigo/violet mesh, glass panels, math-adjacent accents */
+  --bg-a: #eef1ff;
+  --bg-b: #e6e9fb;
+  --bg-c: #f4f0ff;
+  --ink: #1e1b45;
+  --ink-soft: #625f82;
+  --ink-faint: #9793b3;
+
+  --glass: rgba(255,255,255,0.56);
+  --glass-strong: rgba(255,255,255,0.78);
+  --glass-border: rgba(255,255,255,0.75);
+  --glass-shadow: 0 8px 32px rgba(76, 70, 145, 0.14), 0 1.5px 0 rgba(255,255,255,0.6) inset;
+
+  --primary: #5b53e8;
+  --primary-dark: #4038c9;
+  --violet: #8b5cf6;
+  --amber: #d97706;
+
+  --success: #0f9d6a;
+  --success-bg: rgba(15, 157, 106, 0.12);
+  --success-border: rgba(15, 157, 106, 0.4);
+
+  --error: #e2405a;
+  --error-bg: rgba(226, 64, 90, 0.10);
+  --error-border: rgba(226, 64, 90, 0.4);
+
+  --radius-lg: 26px;
+  --radius-md: 16px;
+  --radius-sm: 10px;
+
+  --font-display: 'Fraunces', serif;
+  --font-body: 'Inter', sans-serif;
+  --font-mono: 'JetBrains Mono', monospace;
+}
+
+*{ box-sizing: border-box; margin:0; padding:0; }
+
+html{ scroll-behavior: smooth; }
+
+body{
+  font-family: var(--font-body);
+  color: var(--ink);
+  min-height: 100vh;
+  background:
+    radial-gradient(circle at 12% 8%, rgba(139,92,246,0.16), transparent 42%),
+    radial-gradient(circle at 88% 18%, rgba(91,83,232,0.14), transparent 40%),
+    radial-gradient(circle at 50% 100%, rgba(217,119,6,0.08), transparent 45%),
+    linear-gradient(160deg, var(--bg-a), var(--bg-b) 55%, var(--bg-c));
+  background-attachment: fixed;
+  position: relative;
+  overflow-x: hidden;
+}
+
+/* faint mathematical set-notation motifs floating in the background — subject signature */
+body::before{
+  content: "{ x ∈ G | x∗x⁻¹ = e }";
+  position: fixed;
+  top: 6%;
+  left: -4%;
+  font-family: var(--font-mono);
+  font-size: 13vw;
+  color: rgba(91,83,232,0.045);
+  white-space: nowrap;
+  pointer-events: none;
+  z-index: 0;
+  transform: rotate(-6deg);
+}
+body::after{
+  content: "F[x] / ⟨p(x)⟩";
+  position: fixed;
+  bottom: 4%;
+  right: -2%;
+  font-family: var(--font-mono);
+  font-size: 9vw;
+  color: rgba(139,92,246,0.045);
+  white-space: nowrap;
+  pointer-events: none;
+  z-index: 0;
+  transform: rotate(4deg);
+}
+
+.app{
+  position: relative;
+  z-index: 1;
+  max-width: 900px;
+  margin: 0 auto;
+  padding: clamp(20px, 4vw, 48px) clamp(16px, 4vw, 24px) 64px;
+}
+
+/* ============================================================
+   GLASS PANEL — the shared liquid-glassmorphism surface
+   ============================================================ */
+.glass{
+  background: var(--glass);
+  backdrop-filter: blur(22px) saturate(160%);
+  -webkit-backdrop-filter: blur(22px) saturate(160%);
+  border: 1px solid var(--glass-border);
+  border-radius: var(--radius-lg);
+  box-shadow: var(--glass-shadow);
+}
+
+.view{ display: none; animation: rise 0.5s cubic-bezier(.2,.8,.2,1); }
+.view.active{ display: block; }
+
+@keyframes rise{
+  from{ opacity: 0; transform: translateY(14px); }
+  to{ opacity: 1; transform: translateY(0); }
+}
+@media (prefers-reduced-motion: reduce){
+  .view{ animation: none; }
+  *{ transition: none !important; animation-duration: 0.001s !important; }
+}
+
+/* ============================================================
+   HOME VIEW
+   ============================================================ */
+.hero{
+  text-align: center;
+  padding: clamp(28px, 6vw, 52px) clamp(16px, 5vw, 40px);
+  margin-bottom: 28px;
+}
+.eyebrow{
+  font-family: var(--font-mono);
+  font-size: 12.5px;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--violet);
+  font-weight: 600;
+  margin-bottom: 14px;
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+}
+.eyebrow::before, .eyebrow::after{ content: "◆"; font-size: 7px; opacity: 0.6; }
+
+.hero h1{
+  font-family: var(--font-display);
+  font-weight: 600;
+  font-size: clamp(32px, 6vw, 52px);
+  line-height: 1.08;
+  letter-spacing: -0.01em;
+  color: var(--ink);
+}
+.hero h1 em{
+  font-style: italic;
+  font-weight: 500;
+  background: linear-gradient(100deg, var(--primary), var(--violet));
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+}
+.hero p{
+  margin-top: 14px;
+  color: var(--ink-soft);
+  font-size: 16px;
+  max-width: 480px;
+  margin-left: auto;
+  margin-right: auto;
+  line-height: 1.55;
+}
+
+.mode-grid{
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  gap: 18px;
+}
+@media (max-width: 720px){
+  .mode-grid{ grid-template-columns: 1fr; }
+}
+
+.mode-card{
+  padding: 26px 22px;
+  cursor: pointer;
+  text-align: left;
+  position: relative;
+  overflow: hidden;
+  transition: transform 0.35s cubic-bezier(.2,.8,.2,1), box-shadow 0.35s;
+}
+.mode-card:hover{
+  transform: translateY(-6px);
+  box-shadow: 0 20px 46px rgba(76,70,145,0.22), 0 1.5px 0 rgba(255,255,255,0.7) inset;
+}
+.mode-card:focus-visible{
+  outline: 2.5px solid var(--primary);
+  outline-offset: 3px;
+}
+.mode-card .glyph{
+  font-size: 26px;
+  margin-bottom: 16px;
+  display: block;
+}
+.mode-card h3{
+  font-family: var(--font-display);
+  font-size: 21px;
+  font-weight: 600;
+  margin-bottom: 6px;
+}
+.mode-card p.set-def{
+  font-family: var(--font-mono);
+  font-size: 12.5px;
+  color: var(--ink-faint);
+  margin-bottom: 16px;
+}
+.mode-card .count{
+  font-family: var(--font-mono);
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--primary-dark);
+  background: rgba(91,83,232,0.09);
+  display: inline-block;
+  padding: 5px 12px;
+  border-radius: 100px;
+}
+.mode-card .go{
+  position: absolute;
+  bottom: 22px;
+  right: 20px;
+  font-size: 18px;
+  color: var(--primary);
+  transition: transform 0.3s;
+}
+.mode-card:hover .go{ transform: translateX(4px); }
+
+.home-footnote{
+  text-align: center;
+  margin-top: 22px;
+  color: var(--ink-faint);
+  font-size: 13px;
+  font-family: var(--font-mono);
+}
+
+/* ============================================================
+   QUIZ VIEW
+   ============================================================ */
+.quiz-topbar{
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  padding: 16px 22px;
+  margin-bottom: 18px;
+}
+.quiz-topbar .q-counter{
+  font-family: var(--font-mono);
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--ink);
+}
+.quiz-topbar .q-counter span{ color: var(--primary); }
+.timer{
+  font-family: var(--font-mono);
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--ink-soft);
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  background: rgba(255,255,255,0.5);
+  padding: 6px 12px;
+  border-radius: 100px;
+}
+.timer .dot{
+  width: 7px; height: 7px; border-radius: 50%;
+  background: var(--success);
+  box-shadow: 0 0 0 0 rgba(15,157,106,0.5);
+  animation: pulse 1.8s infinite;
+}
+@keyframes pulse{
+  0%{ box-shadow: 0 0 0 0 rgba(15,157,106,0.45); }
+  70%{ box-shadow: 0 0 0 7px rgba(15,157,106,0); }
+  100%{ box-shadow: 0 0 0 0 rgba(15,157,106,0); }
+}
+.quit-btn{
+  background: none; border: none;
+  font-family: var(--font-body);
+  font-size: 13px;
+  color: var(--ink-faint);
+  cursor: pointer;
+  font-weight: 600;
+}
+.quit-btn:hover{ color: var(--error); }
+
+.progress-track{
+  height: 6px;
+  border-radius: 100px;
+  background: rgba(91,83,232,0.12);
+  margin: 0 22px 20px;
+  overflow: hidden;
+}
+.progress-fill{
+  height: 100%;
+  border-radius: 100px;
+  background: linear-gradient(90deg, var(--primary), var(--violet));
+  transition: width 0.4s cubic-bezier(.2,.8,.2,1);
+}
+
+.quiz-body{
+  display: grid;
+  grid-template-columns: 1fr 220px;
+  gap: 18px;
+  align-items: start;
+}
+@media (max-width: 780px){
+  .quiz-body{ grid-template-columns: 1fr; }
+  .palette-panel{ order: 3; }
+}
+
+.question-card{ padding: clamp(22px,4vw,36px); }
+.question-tag{
+  font-family: var(--font-mono);
+  font-size: 12px;
+  color: var(--violet);
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  margin-bottom: 10px;
+  display: block;
+}
+.question-text{
+  font-family: var(--font-display);
+  font-size: clamp(19px, 2.6vw, 24px);
+  font-weight: 500;
+  line-height: 1.4;
+  color: var(--ink);
+  margin-bottom: 26px;
+}
+
+.options{ display: flex; flex-direction: column; gap: 12px; }
+.option{
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  padding: 14px 16px;
+  border-radius: var(--radius-md);
+  border: 1.5px solid rgba(91,83,232,0.14);
+  background: rgba(255,255,255,0.45);
+  cursor: pointer;
+  transition: all 0.22s ease;
+  text-align: left;
+}
+.option:hover{
+  border-color: rgba(91,83,232,0.4);
+  background: rgba(255,255,255,0.7);
+  transform: translateX(3px);
+}
+.option .letter{
+  font-family: var(--font-mono);
+  font-weight: 700;
+  font-size: 13px;
+  width: 30px; height: 30px;
+  flex-shrink: 0;
+  border-radius: 50%;
+  display: flex; align-items: center; justify-content: center;
+  background: rgba(91,83,232,0.1);
+  color: var(--primary-dark);
+}
+.option .text{ font-size: 15.5px; color: var(--ink); line-height: 1.4; }
+.option.selected{
+  border-color: var(--primary);
+  background: rgba(91,83,232,0.13);
+}
+.option.selected .letter{
+  background: var(--primary);
+  color: #fff;
+}
+
+/* review-mode coloring */
+.option.correct-answer{
+  border-color: var(--success-border);
+  background: var(--success-bg);
+}
+.option.correct-answer .letter{ background: var(--success); color: #fff; }
+.option.wrong-answer{
+  border-color: var(--error-border);
+  background: var(--error-bg);
+}
+.option.wrong-answer .letter{ background: var(--error); color: #fff; }
+.option.review-disabled{ cursor: default; }
+.option.review-disabled:hover{ transform: none; }
+
+.nav-buttons{
+  display: flex;
+  justify-content: space-between;
+  gap: 12px;
+  margin-top: 28px;
+}
+
+/* Buttons */
+.btn{
+  font-family: var(--font-body);
+  font-weight: 700;
+  font-size: 14.5px;
+  padding: 12px 22px;
+  border-radius: 100px;
+  border: none;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  transition: transform 0.2s, box-shadow 0.2s, opacity 0.2s;
+}
+.btn:active{ transform: scale(0.97); }
+.btn:disabled{ opacity: 0.4; cursor: not-allowed; }
+.btn-primary{
+  background: linear-gradient(100deg, var(--primary), var(--violet));
+  color: #fff;
+  box-shadow: 0 10px 24px rgba(91,83,232,0.35);
+}
+.btn-primary:hover:not(:disabled){ box-shadow: 0 14px 30px rgba(91,83,232,0.45); }
+.btn-ghost{
+  background: rgba(255,255,255,0.55);
+  color: var(--ink);
+  border: 1.5px solid rgba(91,83,232,0.18);
+}
+.btn-ghost:hover:not(:disabled){ background: rgba(255,255,255,0.85); }
+.btn-success{
+  background: linear-gradient(100deg, var(--success), #13b881);
+  color: #fff;
+  box-shadow: 0 10px 24px rgba(15,157,106,0.32);
+}
+.btn-block{ width: 100%; justify-content: center; }
+.btn-sm{ padding: 9px 16px; font-size: 13px; }
+
+/* Palette panel */
+.palette-panel{ padding: 20px; }
+.palette-panel h4{
+  font-family: var(--font-mono);
+  font-size: 12px;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+  color: var(--ink-faint);
+  margin-bottom: 14px;
+}
+.palette-grid{
+  display: grid;
+  grid-template-columns: repeat(5, 1fr);
+  gap: 8px;
+}
+.palette-item{
+  aspect-ratio: 1;
+  border-radius: 9px;
+  border: 1.5px solid rgba(91,83,232,0.16);
+  background: rgba(255,255,255,0.4);
+  font-family: var(--font-mono);
+  font-weight: 700;
+  font-size: 12.5px;
+  color: var(--ink-soft);
+  cursor: pointer;
+  display: flex; align-items: center; justify-content: center;
+  transition: all 0.2s;
+}
+.palette-item:hover{ transform: scale(1.08); }
+.palette-item.answered{
+  background: rgba(15,157,106,0.16);
+  border-color: rgba(15,157,106,0.4);
+  color: var(--success);
+}
+.palette-item.current{
+  background: var(--primary);
+  color: #fff;
+  border-color: var(--primary);
+  box-shadow: 0 0 0 3px rgba(91,83,232,0.22);
+}
+.palette-legend{
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  margin-top: 16px;
+  font-size: 12px;
+  color: var(--ink-soft);
+}
+.palette-legend .row{ display: flex; align-items: center; gap: 8px; }
+.legend-dot{ width: 12px; height: 12px; border-radius: 4px; flex-shrink: 0; }
+.legend-dot.a{ background: rgba(15,157,106,0.5); }
+.legend-dot.n{ background: rgba(255,255,255,0.6); border: 1.5px solid rgba(91,83,232,0.2); }
+.legend-dot.c{ background: var(--primary); }
+
+.submit-cta{ margin-top: 18px; }
+
+/* ============================================================
+   RESULT VIEW
+   ============================================================ */
+.result-hero{
+  text-align: center;
+  padding: clamp(30px,6vw,46px) 24px;
+  margin-bottom: 20px;
+}
+.result-badge{
+  font-family: var(--font-mono);
+  font-size: 12.5px;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  font-weight: 700;
+  padding: 7px 16px;
+  border-radius: 100px;
+  display: inline-block;
+  margin-bottom: 18px;
+}
+.result-badge.pass{ background: var(--success-bg); color: var(--success); border: 1.5px solid var(--success-border); }
+.result-badge.fail{ background: var(--error-bg); color: var(--error); border: 1.5px solid var(--error-border); }
+
+.score-ring-wrap{
+  display: flex;
+  justify-content: center;
+  margin: 6px 0 18px;
+}
+.score-ring{ position: relative; width: 168px; height: 168px; }
+.score-ring svg{ transform: rotate(-90deg); }
+.score-ring .pct{
+  position: absolute; inset: 0;
+  display: flex; flex-direction: column; align-items: center; justify-content: center;
+}
+.score-ring .pct .num{ font-family: var(--font-display); font-size: 38px; font-weight: 600; color: var(--ink); }
+.score-ring .pct .lbl{ font-family: var(--font-mono); font-size: 11px; color: var(--ink-faint); margin-top: 2px; }
+
+.stats-grid{
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 12px;
+  margin-top: 8px;
+}
+@media (max-width: 640px){ .stats-grid{ grid-template-columns: repeat(2, 1fr); } }
+.stat-card{
+  padding: 18px 14px;
+  text-align: center;
+}
+.stat-card .stat-num{ font-family: var(--font-display); font-size: 24px; font-weight: 600; }
+.stat-card .stat-lbl{ font-family: var(--font-mono); font-size: 11px; color: var(--ink-faint); margin-top: 4px; text-transform: uppercase; letter-spacing: 0.04em; }
+.stat-card.correct .stat-num{ color: var(--success); }
+.stat-card.wrong .stat-num{ color: var(--error); }
+
+.result-actions{
+  display: flex;
+  gap: 12px;
+  margin-top: 22px;
+  flex-wrap: wrap;
+  justify-content: center;
+}
+
+/* Inline answer-preview list shown right on the result page after submit */
+.preview-card{
+  padding: clamp(20px, 4vw, 30px);
+  margin-top: 18px;
+}
+.preview-heading{
+  font-family: var(--font-mono);
+  font-size: 12px;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--ink-faint);
+  margin-bottom: 16px;
+}
+.answer-preview-list{
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+.preview-item{
+  border-radius: var(--radius-md);
+  border: 1.5px solid rgba(91,83,232,0.14);
+  background: rgba(255,255,255,0.4);
+  padding: 16px 18px;
+}
+.preview-item.is-correct{ border-color: var(--success-border); background: var(--success-bg); }
+.preview-item.is-wrong{ border-color: var(--error-border); background: var(--error-bg); }
+.preview-item.is-skipped{ border-color: rgba(151,147,179,0.3); background: rgba(151,147,179,0.06); }
+
+.preview-item-head{
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 12px;
+  margin-bottom: 10px;
+}
+.preview-q-num{
+  font-family: var(--font-mono);
+  font-size: 12px;
+  font-weight: 700;
+  color: var(--violet);
+  flex-shrink: 0;
+}
+.preview-q-text{
+  font-size: 14.5px;
+  font-weight: 600;
+  color: var(--ink);
+  line-height: 1.4;
+}
+.preview-status-pill{
+  font-family: var(--font-mono);
+  font-size: 11px;
+  font-weight: 700;
+  padding: 4px 10px;
+  border-radius: 100px;
+  white-space: nowrap;
+  flex-shrink: 0;
+}
+.preview-status-pill.correct{ background: rgba(15,157,106,0.16); color: var(--success); }
+.preview-status-pill.wrong{ background: rgba(226,64,90,0.16); color: var(--error); }
+.preview-status-pill.skipped{ background: rgba(151,147,179,0.18); color: var(--ink-faint); }
+
+.preview-answer-row{
+  font-size: 13.5px;
+  line-height: 1.5;
+  padding-left: 2px;
+}
+.preview-answer-row .your{ color: var(--error); font-weight: 600; }
+.preview-answer-row .your.ok{ color: var(--success); }
+.preview-answer-row .correct-line{ color: var(--success); font-weight: 600; }
+
+/* ============================================================
+   REVIEW VIEW
+   ============================================================ */
+.review-topbar{
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 14px;
+  padding: 16px 22px;
+  margin-bottom: 18px;
+  flex-wrap: wrap;
+}
+.review-filters{ display: flex; gap: 8px; }
+.filter-chip{
+  font-family: var(--font-mono);
+  font-size: 12.5px;
+  font-weight: 600;
+  padding: 8px 14px;
+  border-radius: 100px;
+  border: 1.5px solid rgba(91,83,232,0.18);
+  background: rgba(255,255,255,0.4);
+  cursor: pointer;
+  color: var(--ink-soft);
+}
+.filter-chip.active{ background: var(--primary); color: #fff; border-color: var(--primary); }
+
+.review-status-tag{
+  font-family: var(--font-mono);
+  font-size: 12px;
+  font-weight: 700;
+  padding: 5px 12px;
+  border-radius: 100px;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  margin-bottom: 12px;
+}
+.review-status-tag.correct{ background: var(--success-bg); color: var(--success); }
+.review-status-tag.wrong{ background: var(--error-bg); color: var(--error); }
+.review-status-tag.skipped{ background: rgba(151,147,179,0.14); color: var(--ink-faint); }
+
+.correct-answer-note{
+  margin-top: 18px;
+  padding: 12px 16px;
+  border-radius: var(--radius-sm);
+  background: rgba(15,157,106,0.08);
+  border: 1.5px dashed var(--success-border);
+  font-size: 14px;
+  color: var(--success);
+  font-weight: 600;
+}
+.your-answer-note{
+  margin-top: 10px;
+  padding: 12px 16px;
+  border-radius: var(--radius-sm);
+  background: rgba(226,64,90,0.06);
+  border: 1.5px dashed var(--error-border);
+  font-size: 14px;
+  color: var(--error);
+  font-weight: 600;
+}
+
+.empty-state{
+  text-align: center;
+  padding: 40px 20px;
+  color: var(--ink-faint);
+  font-family: var(--font-mono);
+  font-size: 14px;
+}
+
+/* Scrollbar niceties */
+::-webkit-scrollbar{ width: 10px; }
+::-webkit-scrollbar-thumb{ background: rgba(91,83,232,0.25); border-radius: 100px; }
+
+.sr-only{
+  position: absolute; width: 1px; height: 1px;
+  padding: 0; margin: -1px; overflow: hidden;
+  clip: rect(0,0,0,0); white-space: nowrap; border: 0;
+}
+
+/* ============================================================
+   THEMED MODAL — replaces native confirm()/alert() dialogs
+   ============================================================ */
+.modal-overlay{
+  position: fixed;
+  inset: 0;
+  background: rgba(30, 27, 69, 0.38);
+  backdrop-filter: blur(4px);
+  -webkit-backdrop-filter: blur(4px);
+  display: none;
+  align-items: center;
+  justify-content: center;
+  z-index: 1000;
+  padding: 20px;
+  opacity: 0;
+  transition: opacity 0.25s ease;
+}
+.modal-overlay.active{
+  display: flex;
+  opacity: 1;
+}
+.modal-card{
+  width: 100%;
+  max-width: 380px;
+  padding: 32px 28px 26px;
+  text-align: center;
+  transform: translateY(14px) scale(0.97);
+  transition: transform 0.3s cubic-bezier(.2,.8,.2,1);
+  background: var(--glass-strong);
+}
+.modal-overlay.active .modal-card{
+  transform: translateY(0) scale(1);
+}
+.modal-icon{
+  font-size: 30px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 56px;
+  height: 56px;
+  border-radius: 50%;
+  background: rgba(91,83,232,0.12);
+  margin-bottom: 16px;
+}
+.modal-icon.warn{ background: rgba(217,119,6,0.14); }
+.modal-icon.danger{ background: var(--error-bg); }
+.modal-title{
+  font-family: var(--font-display);
+  font-size: 21px;
+  font-weight: 600;
+  color: var(--ink);
+  margin-bottom: 8px;
+}
+.modal-message{
+  font-size: 14.5px;
+  color: var(--ink-soft);
+  line-height: 1.5;
+  margin-bottom: 24px;
+}
+.modal-actions{
+  display: flex;
+  gap: 10px;
+  justify-content: center;
+}
+.modal-actions .btn{ flex: 1; justify-content: center; }
+</style>
+</head>
+<body>
+
+<div class="app">
+
+  <!-- ============================================================
+       HOME VIEW
+       ============================================================ -->
+  <section id="view-home" class="view active">
+    <div class="hero glass">
+      <span class="eyebrow">Algebra &amp; Number Theory Practice</span>
+      <h1>Groups, Rings <em>&amp;</em> Numbers</h1>
+      <p>Sixty questions drawn from your Unit&nbsp;I (Group Theory), Unit&nbsp;II (Ring Theory), and Unit&nbsp;III (Number Theory) material. Pick a set below to begin.</p>
+    </div>
+
+    <div class="mode-grid" id="mode-grid"></div>
+
+    <p class="home-footnote">Your progress isn't saved between sessions — finish each attempt in one sitting.</p>
+  </section>
+
+  <!-- ============================================================
+       QUIZ VIEW
+       ============================================================ -->
+  <section id="view-quiz" class="view">
+    <div class="quiz-topbar glass">
+      <div class="q-counter">Question <span id="q-current">1</span> of <span id="q-total">20</span></div>
+      <div class="timer"><span class="dot"></span><span id="timer-display">00:00</span></div>
+      <button class="quit-btn" id="btn-quit">Exit</button>
+    </div>
+
+    <div class="progress-track"><div class="progress-fill" id="progress-fill" style="width:0%"></div></div>
+
+    <div class="quiz-body">
+      <div class="question-card glass">
+        <span class="question-tag" id="question-tag">UNIT I · QUESTION 1</span>
+        <div class="question-text" id="question-text"></div>
+        <div class="options" id="options-container"></div>
+
+        <div class="nav-buttons">
+          <button class="btn btn-ghost" id="btn-prev">← Previous</button>
+          <button class="btn btn-primary" id="btn-next">Next →</button>
+        </div>
+      </div>
+
+      <aside class="palette-panel glass">
+        <h4>Question Palette</h4>
+        <div class="palette-grid" id="palette-grid"></div>
+        <div class="palette-legend">
+          <div class="row"><span class="legend-dot a"></span>Answered</div>
+          <div class="row"><span class="legend-dot n"></span>Not answered</div>
+          <div class="row"><span class="legend-dot c"></span>Current</div>
+        </div>
+        <div class="submit-cta">
+          <button class="btn btn-success btn-block" id="btn-submit">Submit Quiz</button>
+        </div>
+      </aside>
+    </div>
+  </section>
+
+  <!-- ============================================================
+       RESULT VIEW
+       ============================================================ -->
+  <section id="view-result" class="view">
+    <div class="result-hero glass">
+      <span class="result-badge" id="result-badge">PASS</span>
+      <div class="score-ring-wrap">
+        <div class="score-ring">
+          <svg width="168" height="168" viewBox="0 0 168 168">
+            <circle cx="84" cy="84" r="74" fill="none" stroke="rgba(91,83,232,0.12)" stroke-width="14"/>
+            <circle id="score-ring-fill" cx="84" cy="84" r="74" fill="none" stroke="url(#ringGrad)" stroke-width="14" stroke-linecap="round" stroke-dasharray="465" stroke-dashoffset="465"/>
+            <defs>
+              <linearGradient id="ringGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+                <stop offset="0%" stop-color="#5b53e8"/>
+                <stop offset="100%" stop-color="#8b5cf6"/>
+              </linearGradient>
+            </defs>
+          </svg>
+          <div class="pct">
+            <span class="num" id="result-pct">0%</span>
+            <span class="lbl">SCORE</span>
+          </div>
+        </div>
+      </div>
+
+      <div class="stats-grid">
+        <div class="stat-card glass correct">
+          <div class="stat-num" id="stat-correct">0</div>
+          <div class="stat-lbl">Correct</div>
+        </div>
+        <div class="stat-card glass wrong">
+          <div class="stat-num" id="stat-wrong">0</div>
+          <div class="stat-lbl">Wrong</div>
+        </div>
+        <div class="stat-card glass">
+          <div class="stat-num" id="stat-total">0</div>
+          <div class="stat-lbl">Total Qs</div>
+        </div>
+        <div class="stat-card glass">
+          <div class="stat-num" id="stat-time">0:00</div>
+          <div class="stat-lbl">Time Taken</div>
+        </div>
+      </div>
+
+      <div class="result-actions">
+        <button class="btn btn-primary" id="btn-review-all">Open Full Review</button>
+        <button class="btn btn-ghost" id="btn-review-wrong">Review Wrong Only</button>
+        <button class="btn btn-ghost" id="btn-restart">Restart Quiz</button>
+      </div>
+    </div>
+
+    <div class="preview-card glass">
+      <h4 class="preview-heading">Your Answers</h4>
+      <div class="answer-preview-list" id="answer-preview-list"></div>
+    </div>
+  </section>
+
+  <!-- ============================================================
+       REVIEW VIEW
+       ============================================================ -->
+  <section id="view-review" class="view">
+    <div class="review-topbar glass">
+      <div class="q-counter">Reviewing <span id="rv-current">1</span> of <span id="rv-total">20</span></div>
+      <div class="review-filters">
+        <button class="filter-chip active" id="filter-all">All</button>
+        <button class="filter-chip" id="filter-wrong">Wrong only</button>
+      </div>
+      <button class="quit-btn" id="btn-review-exit">Back to results</button>
+    </div>
+
+    <div class="quiz-body">
+      <div class="question-card glass">
+        <span class="question-tag" id="rv-question-tag">UNIT I · QUESTION 1</span>
+        <span class="review-status-tag" id="rv-status-tag">Correct!</span>
+        <div class="question-text" id="rv-question-text"></div>
+        <div class="options" id="rv-options-container"></div>
+        <div id="rv-notes"></div>
+
+        <div class="nav-buttons">
+          <button class="btn btn-ghost" id="rv-btn-prev">← Previous</button>
+          <button class="btn btn-primary" id="rv-btn-next">Next →</button>
+        </div>
+      </div>
+
+      <aside class="palette-panel glass">
+        <h4>Jump to Question</h4>
+        <div class="palette-grid" id="rv-palette-grid"></div>
+        <div class="palette-legend">
+          <div class="row"><span class="legend-dot" style="background:rgba(15,157,106,0.5)"></span>Correct</div>
+          <div class="row"><span class="legend-dot" style="background:rgba(226,64,90,0.5)"></span>Wrong</div>
+          <div class="row"><span class="legend-dot n"></span>Skipped</div>
+        </div>
+      </aside>
+    </div>
+  </section>
+
+  <!-- ============================================================
+       THEMED CONFIRM MODAL — replaces native browser confirm()/alert()
+       ============================================================ -->
+  <div class="modal-overlay" id="modal-overlay">
+    <div class="modal-card glass">
+      <span class="modal-icon" id="modal-icon">❓</span>
+      <h3 class="modal-title" id="modal-title">Are you sure?</h3>
+      <p class="modal-message" id="modal-message">Message goes here.</p>
+      <div class="modal-actions">
+        <button class="btn btn-ghost" id="modal-cancel">Cancel</button>
+        <button class="btn btn-primary" id="modal-confirm">OK</button>
+      </div>
+    </div>
+  </div>
+
+</div>
+
+<script>
+/* ================================================================
+   QUESTION DATA
+   Extracted from the two uploaded MCQ sources (Unit I: Group Theory,
+   Unit II: Ring Theory). Replace the arrays below to update the quiz
+   — nothing else in the app needs to change.
+   ================================================================ */
+const UNIT1 = [
+  {q:"A group is a set G together with a binary operation ∗ satisfying", options:["Closure only","Closure, associativity, identity, and inverse","Closure and commutativity","Identity and inverse only"], correct:1},
+  {q:"The identity element in the group (ℤ, +) is", options:["1","0","−1","None of these"], correct:1},
+  {q:"Which property distinguishes an Abelian group from a general group?", options:["Closure","Associativity","Commutativity","Existence of inverse"], correct:2},
+  {q:"The inverse of an element a in a group satisfies", options:["a·a = e","a·a⁻¹ = e","a + a = 0","a = e"], correct:1},
+  {q:"Every group contains", options:["At least two identity elements","Exactly one identity element","No identity element","More than one inverse for each element"], correct:1},
+  {q:"Which of the following is a cyclic group?", options:["ℤ under addition","ℚ under addition","ℝ under addition","Positive integers under multiplication"], correct:0},
+  {q:"A cyclic group is generated by", options:["Exactly two elements","One element","Three elements","Identity only"], correct:1},
+  {q:"Every cyclic group is", options:["Non-Abelian","Abelian","Infinite","Finite"], correct:1},
+  {q:"A homomorphism between two groups preserves", options:["Elements only","Binary operation","Identity only","Order only"], correct:1},
+  {q:"An isomorphism is", options:["One-to-one homomorphism","Onto homomorphism","Bijective homomorphism","Identity mapping"], correct:2},
+  {q:"Two groups are isomorphic if", options:["They have equal order only","Their operations are preserved by a bijection","They are Abelian","Both are cyclic"], correct:1},
+  {q:"A left coset of H in G determined by a ∈ G is", options:["Ha","aH","H ∪ a","H ∩ a"], correct:1},
+  {q:"A right coset of H is", options:["Ha","aH","H + a","H − a"], correct:0},
+  {q:"Two distinct cosets are", options:["Equal","Disjoint","Intersect at one element","Overlapping"], correct:1},
+  {q:"Lagrange's theorem states that", options:["Every subgroup is cyclic","Order of subgroup divides order of group","Every group is Abelian","Every element generates the group"], correct:1},
+  {q:"If |G| = 24 and |H| = 6, then the index [G:H] is", options:["2","3","4","6"], correct:2},
+  {q:"If G is cyclic of order n, then the number of generators is", options:["n","φ(n)","n − 1","2n"], correct:1},
+  {q:"Which of the following is an infinite cyclic group?", options:["ℤ₆","ℤ under addition","S₃","D₄"], correct:1},
+  {q:"According to Lagrange's theorem, the order of a subgroup", options:["Is greater than the order of the group","Divides the order of the group","Is always a prime number","Is equal to the order of the group"], correct:1},
+  {q:"The index of a subgroup H in G is", options:["|H|","Number of cosets of H","Order of G","Number of generators"], correct:1},
+];
+
+const UNIT2 = [
+  {q:"A ring is a set equipped with", options:["One binary operation","Two binary operations","Three binary operations","No binary operation"], correct:1},
+  {q:"In a ring, addition forms a", options:["Group","Abelian group","Semigroup","Monoid"], correct:1},
+  {q:"A subring is", options:["A subset that is itself a ring","Any subset of a ring","A subgroup under multiplication","A field"], correct:0},
+  {q:"Which of the following is a subring of ℤ?", options:["Even integers","Natural numbers","Odd integers","Prime numbers"], correct:0},
+  {q:"An integral domain is", options:["A commutative ring with identity and no zero divisors","Any ring","A field","A finite ring"], correct:0},
+  {q:"A zero divisor is", options:["An element equal to zero","A nonzero element whose product with another nonzero element is zero","The identity element","An inverse element"], correct:1},
+  {q:"A field is", options:["A ring with zero divisors","A commutative ring in which every nonzero element has a multiplicative inverse","Any finite ring","A subgroup"], correct:1},
+  {q:"A ring homomorphism preserves", options:["Addition only","Multiplication only","Both addition and multiplication","Identity only"], correct:2},
+  {q:"The kernel of a ring homomorphism consists of", options:["Elements mapped to zero","Elements mapped to one","Identity elements","Units"], correct:0},
+  {q:"A polynomial ring over a field F is denoted by", options:["F(x)","F[x]","F{x}","Fx"], correct:1},
+  {q:"The degree of the polynomial 3x⁴ + 2x + 1 is", options:["1","2","3","4"], correct:3},
+  {q:"Which polynomial has degree 3?", options:["x² + 1","x³ + x","x⁴ + 2","5"], correct:1},
+  {q:"A polynomial that cannot be factored into lower-degree polynomials over a given field is called", options:["Reducible","Constant","Irreducible","Linear"], correct:2},
+  {q:"Over a finite field, factorization means expressing a polynomial as", options:["A sum of constants","A product of irreducible polynomials","A quotient of polynomials","A matrix"], correct:1},
+  {q:"Which of the following is a polynomial ring?", options:["ℤ[x]","ℤ²","ℤ×ℤ","ℚ⁺"], correct:0},
+  {q:"In ℤ₇, the multiplicative inverse of 3 is", options:["2","4","5","6"], correct:2},
+  {q:"Which of the following contains zero divisors?", options:["ℤ","ℤ₅","ℤ₆","ℚ"], correct:2},
+  {q:"A polynomial that cannot be factored into lower-degree polynomials over a given field is called", options:["Reducible","Constant","Irreducible","Linear"], correct:2},
+  {q:"Every field is an", options:["Integral domain","Abelian group","Ring without identity","Semigroup"], correct:0},
+  {q:"Which of the following statements is true?", options:["Every integral domain is a field.","Every field is an integral domain.","Every ring is a field.","Every subring is a field."], correct:1},
+];
+
+const UNIT3 = [
+  {q:"The Division Algorithm states that for integers a and b > 0, there exist unique integers q and r such that", options:["a = b + r","a = bq + r, 0 ≤ r < b","a = q + r","a = br"], correct:1},
+  {q:"In the Division Algorithm, the remainder r satisfies", options:["r > b","0 ≤ r < b","r < 0","r = b"], correct:1},
+  {q:"The quotient obtained in the Division Algorithm is denoted by", options:["r","a","q","b"], correct:2},
+  {q:"The decimal number system uses base", options:["2","8","10","16"], correct:2},
+  {q:"The binary number system has base", options:["2","8","10","16"], correct:0},
+  {q:"The number of digits used in the binary number system is", options:["2","8","10","16"], correct:0},
+  {q:"Which of the following is a prime number?", options:["21","27","29","35"], correct:2},
+  {q:"A prime number has exactly", options:["One positive divisor","Two positive divisors","Three positive divisors","Four positive divisors"], correct:1},
+  {q:"The Greatest Common Divisor (GCD) of two integers is the", options:["Smallest common multiple","Largest common factor","Smallest divisor","Largest multiple"], correct:1},
+  {q:"The GCD of 18 and 24 is", options:["2","4","6","12"], correct:2},
+  {q:"The Euclidean Algorithm is used to find the", options:["LCM","Prime factors","GCD","Base representation"], correct:2},
+  {q:"The Fundamental Theorem of Arithmetic states that every integer greater than 1 can be expressed as", options:["A sum of primes","A product of prime numbers","A difference of primes","A quotient of primes"], correct:1},
+  {q:"The prime factorization of 60 is", options:["2² × 3 × 5","2 × 3 × 10","5 × 12","3 × 20"], correct:0},
+  {q:"The Least Common Multiple (LCM) of two numbers is the", options:["Largest common factor","Smallest common multiple","Greatest divisor","Smallest divisor"], correct:1},
+  {q:"The LCM of 12 and 15 is", options:["30","45","60","90"], correct:2},
+  {q:"For positive integers a and b, GCD(a,b) × LCM(a,b) =", options:["a + b","a − b","ab","a² + b²"], correct:2},
+  {q:"Which of the following numbers are relatively prime?", options:["8 and 12","9 and 15","14 and 25","18 and 24"], correct:2},
+  {q:"Which of the following numbers is neither prime nor composite?", options:["0","1","2","3"], correct:1},
+  {q:"The binary representation of decimal 10 is", options:["1001","1010","1100","1110"], correct:1},
+  {q:"The remainder when 29 is divided by 6 is", options:["2","3","4","5"], correct:3},
+];
+
+// tag each question with its source unit before assembling modes
+UNIT1.forEach(q => q.unit = "UNIT I");
+UNIT2.forEach(q => q.unit = "UNIT II");
+UNIT3.forEach(q => q.unit = "UNIT III");
+
+const MODES = {
+  unit1: { label: "Unit I", subtitle: "Group Theory", glyph: "📘", setDef: "{ q ∈ Unit I }", questions: UNIT1 },
+  unit2: { label: "Unit II", subtitle: "Ring Theory", glyph: "📙", setDef: "{ q ∈ Unit II }", questions: UNIT2 },
+  unit3: { label: "Unit III", subtitle: "Number Theory", glyph: "🔢", setDef: "{ q ∈ Unit III }", questions: UNIT3 },
+  all:   { label: "All Units", subtitle: "Full Practice Set", glyph: "📚", setDef: "{ q ∈ I ∪ II ∪ III }", questions: [...UNIT1, ...UNIT2, ...UNIT3] },
+};
+
+/* ================================================================
+   STATE
+   ================================================================ */
+let state = {
+  modeKey: null,
+  questions: [],
+  answers: [],      // index of selected option per question, or null
+  currentIndex: 0,
+  startTime: null,
+  endTime: null,
+  timerInterval: null,
+  reviewIndex: 0,
+  reviewFilter: "all",  // "all" | "wrong"
+  reviewList: [],        // indices into state.questions for current filter
+};
+
+const PASS_THRESHOLD = 0.5; // 50% to pass
+
+/* ================================================================
+   VIEW SWITCHING
+   ================================================================ */
+function showView(id){
+  document.querySelectorAll(".view").forEach(v => v.classList.remove("active"));
+  document.getElementById(id).classList.add("active");
+  window.scrollTo({top:0, behavior:"smooth"});
+}
+
+/* ================================================================
+   HOME — build mode cards
+   ================================================================ */
+function buildHome(){
+  const grid = document.getElementById("mode-grid");
+  grid.innerHTML = "";
+  Object.entries(MODES).forEach(([key, mode]) => {
+    const card = document.createElement("div");
+    card.className = "mode-card glass";
+    card.tabIndex = 0;
+    card.setAttribute("role", "button");
+    card.innerHTML = `
+      <span class="glyph">${mode.glyph}</span>
+      <h3>${mode.label}</h3>
+      <p class="set-def">${mode.subtitle}</p>
+      <span class="count">${mode.questions.length} Questions</span>
+      <span class="go">→</span>
+    `;
+    const start = () => startQuiz(key);
+    card.addEventListener("click", start);
+    card.addEventListener("keydown", e => { if(e.key === "Enter" || e.key === " "){ e.preventDefault(); start(); } });
+    grid.appendChild(card);
+  });
+}
+
+/* ================================================================
+   QUIZ — start / render / navigate
+   ================================================================ */
+function startQuiz(modeKey){
+  const mode = MODES[modeKey];
+  state.modeKey = modeKey;
+  state.questions = mode.questions;
+  state.answers = new Array(mode.questions.length).fill(null);
+  state.currentIndex = 0;
+  state.startTime = Date.now();
+  state.endTime = null;
+
+  document.getElementById("q-total").textContent = state.questions.length;
+  buildPalette();
+  renderQuestion();
+  startTimer();
+  showView("view-quiz");
+}
+
+function startTimer(){
+  clearInterval(state.timerInterval);
+  updateTimerDisplay();
+  state.timerInterval = setInterval(updateTimerDisplay, 1000);
+}
+
+function updateTimerDisplay(){
+  const elapsed = Math.floor((Date.now() - state.startTime) / 1000);
+  document.getElementById("timer-display").textContent = formatTime(elapsed);
+}
+
+function formatTime(totalSeconds){
+  const m = Math.floor(totalSeconds / 60).toString().padStart(2, "0");
+  const s = (totalSeconds % 60).toString().padStart(2, "0");
+  return `${m}:${s}`;
+}
+
+function renderQuestion(){
+  const idx = state.currentIndex;
+  const q = state.questions[idx];
+
+  document.getElementById("q-current").textContent = idx + 1;
+  document.getElementById("question-tag").textContent = `${q.unit} · QUESTION ${idx + 1}`;
+  document.getElementById("question-text").textContent = q.q;
+
+  const container = document.getElementById("options-container");
+  container.innerHTML = "";
+  const letters = ["A","B","C","D"];
+  q.options.forEach((opt, i) => {
+    const el = document.createElement("div");
+    el.className = "option" + (state.answers[idx] === i ? " selected" : "");
+    el.innerHTML = `<span class="letter">${letters[i]}</span><span class="text">${opt}</span>`;
+    el.addEventListener("click", () => selectOption(i));
+    container.appendChild(el);
+  });
+
+  document.getElementById("btn-prev").disabled = idx === 0;
+  document.getElementById("btn-next").textContent = idx === state.questions.length - 1 ? "Finish →" : "Next →";
+
+  updateProgress();
+  updatePaletteHighlight();
+}
+
+function selectOption(i){
+  state.answers[state.currentIndex] = i;
+  renderQuestion();
+}
+
+function updateProgress(){
+  const answeredCount = state.answers.filter(a => a !== null).length;
+  const pct = Math.round((answeredCount / state.questions.length) * 100);
+  document.getElementById("progress-fill").style.width = pct + "%";
+}
+
+function buildPalette(){
+  const grid = document.getElementById("palette-grid");
+  grid.innerHTML = "";
+  state.questions.forEach((_, i) => {
+    const btn = document.createElement("button");
+    btn.className = "palette-item";
+    btn.textContent = i + 1;
+    btn.addEventListener("click", () => { state.currentIndex = i; renderQuestion(); });
+    grid.appendChild(btn);
+  });
+}
+
+function updatePaletteHighlight(){
+  const items = document.querySelectorAll("#palette-grid .palette-item");
+  items.forEach((item, i) => {
+    item.classList.toggle("answered", state.answers[i] !== null);
+    item.classList.toggle("current", i === state.currentIndex);
+  });
+}
+
+document.getElementById("btn-prev").addEventListener("click", () => {
+  if(state.currentIndex > 0){ state.currentIndex--; renderQuestion(); }
+});
+
+document.getElementById("btn-next").addEventListener("click", () => {
+  if(state.currentIndex < state.questions.length - 1){
+    state.currentIndex++;
+    renderQuestion();
+  } else {
+    attemptSubmit();
+  }
+});
+
+document.getElementById("btn-submit").addEventListener("click", attemptSubmit);
+
+document.getElementById("btn-quit").addEventListener("click", async () => {
+  const ok = await showConfirm({
+    title: "Exit the quiz?",
+    message: "Your progress will be lost and can't be recovered.",
+    icon: "🚪",
+    tone: "danger",
+    confirmLabel: "Exit quiz",
+  });
+  if(ok){
+    clearInterval(state.timerInterval);
+    showView("view-home");
+  }
+});
+
+async function attemptSubmit(){
+  const unanswered = state.answers.filter(a => a === null).length;
+  let ok;
+  if(unanswered > 0){
+    ok = await showConfirm({
+      title: "Unanswered questions",
+      message: `You still have ${unanswered} unanswered question${unanswered > 1 ? "s" : ""}. Submit anyway?`,
+      icon: "⚠️",
+      tone: "warn",
+      confirmLabel: "Submit anyway",
+    });
+  } else {
+    ok = await showConfirm({
+      title: "Submit the quiz?",
+      message: "You won't be able to change your answers after this.",
+      icon: "✅",
+      tone: "primary",
+      confirmLabel: "Submit",
+    });
+  }
+  if(!ok) return;
+  submitQuiz();
+}
+
+/* ================================================================
+   THEMED MODAL — a promise-based stand-in for window.confirm()
+   ================================================================ */
+function showConfirm({ title, message, icon = "❓", tone = "primary", confirmLabel = "OK", cancelLabel = "Cancel" }){
+  const overlay = document.getElementById("modal-overlay");
+  const iconEl = document.getElementById("modal-icon");
+  const titleEl = document.getElementById("modal-title");
+  const messageEl = document.getElementById("modal-message");
+  const confirmBtn = document.getElementById("modal-confirm");
+  const cancelBtn = document.getElementById("modal-cancel");
+
+  iconEl.textContent = icon;
+  iconEl.className = "modal-icon" + (tone === "warn" ? " warn" : tone === "danger" ? " danger" : "");
+  titleEl.textContent = title;
+  messageEl.textContent = message;
+  confirmBtn.textContent = confirmLabel;
+  cancelBtn.textContent = cancelLabel;
+  confirmBtn.className = "btn " + (tone === "danger" ? "btn-success" : "btn-primary");
+
+  overlay.classList.add("active");
+
+  return new Promise((resolve) => {
+    function cleanup(result){
+      overlay.classList.remove("active");
+      confirmBtn.removeEventListener("click", onConfirm);
+      cancelBtn.removeEventListener("click", onCancel);
+      overlay.removeEventListener("click", onOverlayClick);
+      document.removeEventListener("keydown", onKeydown);
+      resolve(result);
+    }
+    function onConfirm(){ cleanup(true); }
+    function onCancel(){ cleanup(false); }
+    function onOverlayClick(e){ if(e.target === overlay) cleanup(false); }
+    function onKeydown(e){ if(e.key === "Escape") cleanup(false); if(e.key === "Enter") cleanup(true); }
+
+    confirmBtn.addEventListener("click", onConfirm);
+    cancelBtn.addEventListener("click", onCancel);
+    overlay.addEventListener("click", onOverlayClick);
+    document.addEventListener("keydown", onKeydown);
+  });
+}
+
+// auto-submit safeguard: whenever the last answer is filled in via palette/next flow
+function checkAutoSubmit(){
+  if(state.answers.every(a => a !== null) && state.currentIndex === state.questions.length - 1){
+    // do not force — user still confirms via Finish button per requirement 5
+  }
+}
+
+function submitQuiz(){
+  clearInterval(state.timerInterval);
+  state.endTime = Date.now();
+  renderResult();
+  showView("view-result");
+}
+
+/* ================================================================
+   RESULT
+   ================================================================ */
+function renderResult(){
+  const total = state.questions.length;
+  let correct = 0;
+  state.questions.forEach((q, i) => { if(state.answers[i] === q.correct) correct++; });
+  const unanswered = state.answers.filter(a => a === null).length;
+  const wrongCount = total - correct - unanswered;
+  const pct = Math.round((correct / total) * 100);
+  const pass = (correct / total) >= PASS_THRESHOLD;
+  const elapsedSec = Math.floor((state.endTime - state.startTime) / 1000);
+
+  const badge = document.getElementById("result-badge");
+  badge.textContent = pass ? "PASS" : "FAIL";
+  badge.className = "result-badge " + (pass ? "pass" : "fail");
+
+  document.getElementById("result-pct").textContent = pct + "%";
+  document.getElementById("stat-correct").textContent = correct;
+  document.getElementById("stat-wrong").textContent = wrongCount + (unanswered ? ` (+${unanswered} skipped)` : "");
+  document.getElementById("stat-total").textContent = total;
+  document.getElementById("stat-time").textContent = formatTime(elapsedSec);
+
+  // animate the score ring
+  const circumference = 2 * Math.PI * 74;
+  const fill = document.getElementById("score-ring-fill");
+  fill.style.strokeDasharray = circumference;
+  fill.style.strokeDashoffset = circumference;
+  requestAnimationFrame(() => {
+    fill.style.transition = "stroke-dashoffset 1s cubic-bezier(.2,.8,.2,1)";
+    fill.style.strokeDashoffset = circumference - (pct / 100) * circumference;
+  });
+
+  renderAnswerPreview();
+}
+
+/* Inline preview of every answer — shown immediately on the result page
+   right after Submit/Finish is pressed, no extra click required. */
+function renderAnswerPreview(){
+  const letters = ["A","B","C","D"];
+  const list = document.getElementById("answer-preview-list");
+  list.innerHTML = "";
+
+  state.questions.forEach((q, i) => {
+    const userAnswer = state.answers[i];
+    const isSkipped = userAnswer === null;
+    const isCorrect = !isSkipped && userAnswer === q.correct;
+
+    const item = document.createElement("div");
+    item.className = "preview-item " + (isSkipped ? "is-skipped" : isCorrect ? "is-correct" : "is-wrong");
+
+    const pillClass = isSkipped ? "skipped" : isCorrect ? "correct" : "wrong";
+    const pillText = isSkipped ? "⚪ Skipped" : isCorrect ? "✔ Correct" : "✕ Wrong";
+
+    let answerRows = "";
+    if(isSkipped){
+      answerRows = `<div class="preview-answer-row">You didn't answer this one. <span class="correct-line">Correct answer: Option ${letters[q.correct]} — ${q.options[q.correct]}</span></div>`;
+    } else if(isCorrect){
+      answerRows = `<div class="preview-answer-row">Your answer: <span class="your ok">Option ${letters[userAnswer]} — ${q.options[userAnswer]}</span> ✔</div>`;
+    } else {
+      answerRows = `
+        <div class="preview-answer-row">Your answer: <span class="your">Option ${letters[userAnswer]} — ${q.options[userAnswer]}</span> ✕</div>
+        <div class="preview-answer-row">Correct answer: <span class="correct-line">Option ${letters[q.correct]} — ${q.options[q.correct]}</span></div>
+      `;
+    }
+
+    item.innerHTML = `
+      <div class="preview-item-head">
+        <div>
+          <span class="preview-q-num">${q.unit} · Q${i + 1}</span>
+          <div class="preview-q-text">${q.q}</div>
+        </div>
+        <span class="preview-status-pill ${pillClass}">${pillText}</span>
+      </div>
+      ${answerRows}
+    `;
+    list.appendChild(item);
+  });
+}
+
+document.getElementById("btn-restart").addEventListener("click", () => {
+  showView("view-home");
+});
+
+/* ================================================================
+   REVIEW
+   ================================================================ */
+document.getElementById("btn-review-all").addEventListener("click", () => openReview("all"));
+document.getElementById("btn-review-wrong").addEventListener("click", () => openReview("wrong"));
+document.getElementById("btn-review-exit").addEventListener("click", () => showView("view-result"));
+document.getElementById("filter-all").addEventListener("click", () => setReviewFilter("all"));
+document.getElementById("filter-wrong").addEventListener("click", () => setReviewFilter("wrong"));
+
+function openReview(filter){
+  state.reviewFilter = filter;
+  computeReviewList();
+  state.reviewIndex = 0;
+  buildReviewPalette();
+  updateFilterChips();
+  renderReviewQuestion();
+  showView("view-review");
+}
+
+function setReviewFilter(filter){
+  state.reviewFilter = filter;
+  computeReviewList();
+  state.reviewIndex = 0;
+  buildReviewPalette();
+  updateFilterChips();
+  renderReviewQuestion();
+}
+
+function updateFilterChips(){
+  document.getElementById("filter-all").classList.toggle("active", state.reviewFilter === "all");
+  document.getElementById("filter-wrong").classList.toggle("active", state.reviewFilter === "wrong");
+}
+
+function computeReviewList(){
+  if(state.reviewFilter === "wrong"){
+    state.reviewList = state.questions
+      .map((q, i) => ({q, i}))
+      .filter(({q, i}) => state.answers[i] !== q.correct)
+      .map(({i}) => i);
+  } else {
+    state.reviewList = state.questions.map((_, i) => i);
+  }
+}
+
+function buildReviewPalette(){
+  const grid = document.getElementById("rv-palette-grid");
+  grid.innerHTML = "";
+  state.reviewList.forEach((qIndex, listPos) => {
+    const q = state.questions[qIndex];
+    const btn = document.createElement("button");
+    btn.className = "palette-item";
+    const ans = state.answers[qIndex];
+    if(ans === null) btn.style.opacity = "0.55";
+    else if(ans === q.correct) btn.classList.add("answered");
+    else { btn.style.background = "rgba(226,64,90,0.16)"; btn.style.borderColor = "rgba(226,64,90,0.4)"; btn.style.color = "#e2405a"; }
+    btn.textContent = qIndex + 1;
+    btn.addEventListener("click", () => { state.reviewIndex = listPos; renderReviewQuestion(); });
+    grid.appendChild(btn);
+  });
+}
+
+function renderReviewQuestion(){
+  if(state.reviewList.length === 0){
+    document.getElementById("rv-current").textContent = "0";
+    document.getElementById("rv-total").textContent = "0";
+    document.getElementById("rv-question-tag").textContent = "";
+    document.getElementById("rv-status-tag").style.display = "none";
+    document.getElementById("rv-question-text").innerHTML = "";
+    document.getElementById("rv-options-container").innerHTML = `<div class="empty-state">🎉 No wrong answers to review — nice work!</div>`;
+    document.getElementById("rv-notes").innerHTML = "";
+    document.getElementById("rv-btn-prev").disabled = true;
+    document.getElementById("rv-btn-next").disabled = true;
+    return;
+  }
+
+  document.getElementById("rv-status-tag").style.display = "inline-flex";
+  const qIndex = state.reviewList[state.reviewIndex];
+  const q = state.questions[qIndex];
+  const userAnswer = state.answers[qIndex];
+  const letters = ["A","B","C","D"];
+
+  document.getElementById("rv-current").textContent = state.reviewIndex + 1;
+  document.getElementById("rv-total").textContent = state.reviewList.length;
+  document.getElementById("rv-question-tag").textContent = `${q.unit} · QUESTION ${qIndex + 1}`;
+  document.getElementById("rv-question-text").textContent = q.q;
+
+  const statusTag = document.getElementById("rv-status-tag");
+  if(userAnswer === null){
+    statusTag.textContent = "⚪ Skipped";
+    statusTag.className = "review-status-tag skipped";
+  } else if(userAnswer === q.correct){
+    statusTag.textContent = "✔ Correct!";
+    statusTag.className = "review-status-tag correct";
+  } else {
+    statusTag.textContent = "✕ Incorrect";
+    statusTag.className = "review-status-tag wrong";
+  }
+
+  const container = document.getElementById("rv-options-container");
+  container.innerHTML = "";
+  q.options.forEach((opt, i) => {
+    const el = document.createElement("div");
+    let cls = "option review-disabled";
+    if(i === q.correct) cls += " correct-answer";
+    else if(i === userAnswer && userAnswer !== q.correct) cls += " wrong-answer";
+    el.className = cls;
+    el.innerHTML = `<span class="letter">${letters[i]}</span><span class="text">${opt}</span>`;
+    container.appendChild(el);
+  });
+
+  const notes = document.getElementById("rv-notes");
+  notes.innerHTML = "";
+  if(userAnswer === q.correct){
+    notes.innerHTML = `<div class="correct-answer-note">✔ Correct — you selected Option ${letters[userAnswer]}.</div>`;
+  } else {
+    let html = `<div class="correct-answer-note">✔ Correct Answer: Option ${letters[q.correct]} — ${q.options[q.correct]}</div>`;
+    if(userAnswer !== null){
+      html += `<div class="your-answer-note">✕ Your Answer: Option ${letters[userAnswer]} — ${q.options[userAnswer]}</div>`;
+    } else {
+      html += `<div class="your-answer-note">✕ You did not answer this question.</div>`;
+    }
+    notes.innerHTML = html;
+  }
+
+  document.getElementById("rv-btn-prev").disabled = state.reviewIndex === 0;
+  document.getElementById("rv-btn-next").disabled = state.reviewIndex === state.reviewList.length - 1;
+
+  // sync palette current-highlight
+  document.querySelectorAll("#rv-palette-grid .palette-item").forEach((el, i) => {
+    el.classList.toggle("current", i === state.reviewIndex);
+  });
+}
+
+document.getElementById("rv-btn-prev").addEventListener("click", () => {
+  if(state.reviewIndex > 0){ state.reviewIndex--; renderReviewQuestion(); }
+});
+document.getElementById("rv-btn-next").addEventListener("click", () => {
+  if(state.reviewIndex < state.reviewList.length - 1){ state.reviewIndex++; renderReviewQuestion(); }
+});
+
+/* ================================================================
+   INIT
+   ================================================================ */
+buildHome();
+</script>
+</body>
+</html>
