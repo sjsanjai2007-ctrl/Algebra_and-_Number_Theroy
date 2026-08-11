@@ -707,6 +707,24 @@ body::after{
 }
 
 /* ============================================================
+   QUESTION PREVIEW
+   ============================================================ */
+.mode-card .card-actions{display:flex;align-items:center;justify-content:space-between;gap:10px;margin-top:16px}
+.preview-btn{position:relative;z-index:2;padding:8px 13px;border-radius:100px;border:1.5px solid rgba(91,83,232,0.18);background:rgba(255,255,255,0.58);color:var(--primary-dark);font-family:var(--font-body);font-size:12.5px;font-weight:700;cursor:pointer;transition:transform .2s,background .2s,box-shadow .2s}
+.preview-btn:hover{transform:translateY(-1px);background:rgba(255,255,255,0.9);box-shadow:0 6px 16px rgba(76,70,145,.12)}
+.preview-view-head{padding:20px 22px;margin-bottom:18px;display:flex;align-items:center;justify-content:space-between;gap:14px;flex-wrap:wrap}
+.preview-view-title h2{font-family:var(--font-display);font-size:clamp(24px,4vw,32px);font-weight:600}
+.preview-view-title p{margin-top:5px;color:var(--ink-soft);font-size:13.5px}
+.preview-questions{display:flex;flex-direction:column;gap:14px}
+.study-preview-item{padding:20px 22px}
+.study-preview-q{display:flex;gap:12px;align-items:flex-start}
+.study-preview-num{font-family:var(--font-mono);font-size:12px;font-weight:700;color:var(--violet);min-width:72px;padding-top:2px}
+.study-preview-question{font-family:var(--font-display);font-size:17px;line-height:1.45;font-weight:500;color:var(--ink)}
+.study-preview-answer{margin:14px 0 0 84px;padding:11px 14px;border-radius:var(--radius-sm);background:var(--success-bg);border:1.5px solid var(--success-border);color:var(--success);font-size:13.5px;line-height:1.5;font-weight:600}
+.study-preview-answer .answer-label{font-family:var(--font-mono);font-size:11px;text-transform:uppercase;letter-spacing:.05em;margin-right:7px}
+@media(max-width:600px){.study-preview-q{flex-direction:column;gap:4px}.study-preview-num{min-width:0}.study-preview-answer{margin-left:0}.preview-view-head{align-items:flex-start}}
+
+/* ============================================================
    THEMED MODAL — replaces native confirm()/alert() dialogs
    ============================================================ */
 .modal-overlay{
@@ -790,6 +808,20 @@ body::after{
     <div class="mode-grid" id="mode-grid"></div>
 
     <p class="home-footnote">Your progress isn't saved between sessions — finish each attempt in one sitting.</p>
+  </section>
+
+  <!-- ============================================================
+       QUESTION PREVIEW VIEW
+       ============================================================ -->
+  <section id="view-preview" class="view">
+    <div class="preview-view-head glass">
+      <div class="preview-view-title">
+        <h2 id="preview-title">Question Preview</h2>
+        <p id="preview-subtitle">Questions with their correct answers</p>
+      </div>
+      <button class="btn btn-ghost btn-sm" id="btn-preview-back">← Back</button>
+    </div>
+    <div class="preview-questions" id="preview-questions"></div>
   </section>
 
   <!-- ============================================================
@@ -1075,14 +1107,51 @@ function buildHome(){
       <h3>${mode.label}</h3>
       <p class="set-def">${mode.subtitle}</p>
       <span class="count">${mode.questions.length} Questions</span>
-      <span class="go">→</span>
+      <div class="card-actions">
+        <button class="preview-btn" type="button">📖 Preview Q &amp; Ans</button>
+        <span class="go">→</span>
+      </div>
     `;
     const start = () => startQuiz(key);
+    const previewBtn = card.querySelector(".preview-btn");
+    previewBtn.addEventListener("click", e => {
+      e.stopPropagation();
+      openQuestionPreview(key);
+    });
     card.addEventListener("click", start);
     card.addEventListener("keydown", e => { if(e.key === "Enter" || e.key === " "){ e.preventDefault(); start(); } });
     grid.appendChild(card);
   });
 }
+
+/* ================================================================
+   QUESTION PREVIEW — show every question with its correct answer
+   ================================================================ */
+function openQuestionPreview(modeKey){
+  const mode = MODES[modeKey];
+  document.getElementById("preview-title").textContent = `${mode.label} — Question Preview`;
+  document.getElementById("preview-subtitle").textContent = `${mode.questions.length} questions with their correct answers`;
+  const list = document.getElementById("preview-questions");
+  list.innerHTML = "";
+  mode.questions.forEach((q, i) => {
+    const item = document.createElement("article");
+    item.className = "study-preview-item glass";
+    item.innerHTML = `
+      <div class="study-preview-q">
+        <span class="study-preview-num">${q.unit} · Q${i + 1}</span>
+        <div class="study-preview-question">${q.q}</div>
+      </div>
+      <div class="study-preview-answer">
+        <span class="answer-label">Correct Answer</span>
+        ${q.options[q.correct]}
+      </div>
+    `;
+    list.appendChild(item);
+  });
+  showView("view-preview");
+}
+
+document.getElementById("btn-preview-back").addEventListener("click", () => showView("view-home"));
 
 /* ================================================================
    QUIZ — start / render / navigate
